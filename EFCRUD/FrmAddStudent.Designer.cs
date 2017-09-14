@@ -65,7 +65,6 @@
             this.metroBtnSave.Size = new System.Drawing.Size(75, 23);
             this.metroBtnSave.TabIndex = 6;
             this.metroBtnSave.Text = "Save";
-            this.metroBtnSave.Click += new System.EventHandler(this.metroBtnSave_Click);
             // 
             // metroTxtBoxId
             // 
@@ -175,6 +174,7 @@
             // 
             // metroButtonClear
             // 
+            this.metroButtonClear.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.metroButtonClear.Location = new System.Drawing.Point(208, 295);
             this.metroButtonClear.Name = "metroButtonClear";
             this.metroButtonClear.Size = new System.Drawing.Size(75, 23);

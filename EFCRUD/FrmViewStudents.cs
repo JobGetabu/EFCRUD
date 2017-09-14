@@ -28,13 +28,14 @@ namespace EFCRUD
         public static bool isEditButton;
         private void metroBtnAdd_Click(object sender, EventArgs e)
         {
-            isEditButton = false;
+            
 
             using (FrmAddStudent frmAddstudent = new FrmAddStudent(null))
             {
                 if (frmAddstudent.ShowDialog() == DialogResult.OK)
                 {
                     studentsStudentInfoBindingSource.DataSource = context.Students_StudentInfo.ToList();
+                    isEditButton = false;
                 }
             }
 

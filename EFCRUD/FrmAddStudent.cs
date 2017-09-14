@@ -15,6 +15,7 @@ namespace EFCRUD
     {
 
         StudentsEntities context;
+        Students_StudentInfo currentStudent;
         public FrmAddStudent(Students_StudentInfo obj)
         {
             InitializeComponent();
@@ -22,6 +23,7 @@ namespace EFCRUD
             //check if student object is null
             //initialize the studentstudentInfoBindingSource
 
+            currentStudent = obj;
             if (obj == null)
             {
                 studentsStudentInfoBindingSource.DataSource = new Students_StudentInfo();
@@ -49,8 +51,20 @@ namespace EFCRUD
             metroTextBoxForm.Text = "";
         }
 
+        
+
+
+        
+        private void metroBtnSave_Click(object sender, EventArgs e)
+        {
+
+        }
+
         private void searchThroughDb(bool duplicate, StudentsEntities context, Students_StudentInfo obj)
         {
+            //TODO
+            //Look for algorithmn to cancel a click event
+            //Look for algorithm to properly look up an implemented event 
             var query = from s in context.Students_StudentInfo
                         select s;
             foreach (var student in query)
@@ -64,39 +78,41 @@ namespace EFCRUD
             }
         }
 
-
-        //TODO
-        //Look for algorithmn to cancel a click event
-        //Look for algorithm to properly look up an implemented event 
-        private void metroBtnSave_Click(object sender, EventArgs e)
+        private bool isAdminNoAvailable(Students_StudentInfo obj)
         {
-                context.Students_StudentInfo.Add(studentsStudentInfoBindingSource.Current as Students_StudentInfo);
-
-                if (!FrmViewStudents.isEditButton)
+            var query = from s in context.Students_StudentInfo
+                        select s;
+            bool isAdminAvailable = false;
+            foreach (var student in query)
+            {
+                if (metroTextBoxAdminNo.Text.Equals(student.Admin_No))
                 {
-                    searchThroughDb(false, context, studentsStudentInfoBindingSource.Current as Students_StudentInfo);
+                    return isAdminAvailable = true;
                 }
-                else
-                {
-                    context.Entry<Students_StudentInfo>(studentsStudentInfoBindingSource.Current as Students_StudentInfo).State = System.Data.Entity.EntityState.Modified;
-
-                //still a problem in checking for duplicate records in edit function
-                //admin no are still not verified if exists
-                }
-
-                //running this any way still saves duplicate records in the database
-                context.SaveChanges();
+            }
+            return isAdminAvailable;
         }
-
         private void FrmAddStudent_FormClosing(object sender, FormClosingEventArgs e)
         {
                 if (DialogResult == DialogResult.OK)
                 {
-                    if (string.IsNullOrEmpty(metroTextBoxAdminNo.Text) && string.IsNullOrEmpty(metroTextBoxFName.Text) && string.IsNullOrEmpty(metroTextBoxLName.Text) && string.IsNullOrEmpty(metroTextBoxForm.Text))
+                    if (string.IsNullOrEmpty(metroTextBoxAdminNo.Text) || string.IsNullOrEmpty(metroTextBoxFName.Text) || string.IsNullOrEmpty(metroTextBoxLName.Text) || string.IsNullOrEmpty(metroTextBoxForm.Text))
                     {
                         MessageBox.Show(this, "Please fill missing information", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         e.Cancel = true;
+                    return;
                     }
+                //add button
+                if ((FrmViewStudents.isEditButton) != true)
+                {
+                    if (isAdminNoAvailable(currentStudent) != true)
+                    {
+                        MessageBox.Show(this, "The admin number is not available", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+
                     context.SaveChanges();
                     e.Cancel = false;
                 }
