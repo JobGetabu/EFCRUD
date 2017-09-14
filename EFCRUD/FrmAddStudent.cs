@@ -12,36 +12,32 @@ using System.Windows.Forms;
 namespace EFCRUD
 {
     public partial class FrmAddStudent : MetroFramework.Forms.MetroForm
-    {  
+    {
+
+        StudentsEntities context;
         public FrmAddStudent(Students_StudentInfo obj)
         {
             InitializeComponent();
-
+            context = new StudentsEntities();
             //check if student object is null
             //initialize the studentstudentInfoBindingSource
 
-            using(var context = new StudentsEntities())
+            if (obj == null)
             {
-                if (obj == null)
-                {
-                    studentsStudentInfoBindingSource.DataSource = new Students_StudentInfo();
-                    context.Students_StudentInfo.Add(studentsStudentInfoBindingSource.Current as Students_StudentInfo);
-                }
-                else
-                {
-                    studentsStudentInfoBindingSource.DataSource = obj;
-
-                    var studObj = studentsStudentInfoBindingSource.Current as Students_StudentInfo;
-                    context.Students_StudentInfo.Attach(studObj);
-                    context.SaveChanges();
-                }
-               
+                studentsStudentInfoBindingSource.DataSource = new Students_StudentInfo();
+                context.Students_StudentInfo.Add(studentsStudentInfoBindingSource.Current as Students_StudentInfo);
+            }
+            else
+            {
+                studentsStudentInfoBindingSource.DataSource = obj;
+                context.Students_StudentInfo.Attach(studentsStudentInfoBindingSource.Current as Students_StudentInfo);
+                context.SaveChanges();
             }
         }
 
         private void FrmAddStudent_Load(object sender, EventArgs e)
         {
-
+            context = new StudentsEntities();
         }
 
         private void metroButtonClear_Click(object sender, EventArgs e)
@@ -50,49 +46,61 @@ namespace EFCRUD
             metroTextBoxFName.Text = "";
             metroTextBoxLName.Text = "";
             metroTextBoxClass.Text = "";
-            metroTextBoxForm.Text="";
+            metroTextBoxForm.Text = "";
         }
 
-        private void metroBtnSave_Click(object sender, EventArgs e)
+        private void searchThroughDb(bool duplicate, StudentsEntities context, Students_StudentInfo obj)
         {
-            using (var context = new StudentsEntities())
+            var query = from s in context.Students_StudentInfo
+                        select s;
+            foreach (var student in query)
             {
-                var studObj = studentsStudentInfoBindingSource.Current as Students_StudentInfo;
-                context.Students_StudentInfo.Add(studObj);
-
-                if (!FrmViewStudents.isEditButton)
+                if (obj.Admin_No == student.Admin_No)
                 {
-                    bool duplicate = false;
-                    var query = from s in context.Students_StudentInfo
-                                select s;
-
-                    foreach (var student in query)
-                    {
-                        if (studObj.Admin_No == student.Admin_No)
-                        {
-                            MessageBox.Show(this, "Cannot add duplicate student!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            duplicate = true;
-                        }
-                    }
-                    if (!duplicate)
-                    {
-                        context.SaveChanges();
-                        metroButtonClear_Click(sender, e);
-                    }
-                    duplicate = false;
+                    MessageBox.Show(this, "Cannot add duplicate student!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    duplicate = true;
+                    break;
                 }
             }
         }
 
-        private void FrmAddStudent_FormClosed(object sender, FormClosedEventArgs e)
+
+        //TODO
+        //Look for algorithmn to cancel a click event
+        //Look for algorithm to properly look up an implemented event 
+        private void metroBtnSave_Click(object sender, EventArgs e)
         {
-            //studentsStudentInfoBindingSource.DataSource = null;
-            
+                context.Students_StudentInfo.Add(studentsStudentInfoBindingSource.Current as Students_StudentInfo);
+
+                if (!FrmViewStudents.isEditButton)
+                {
+                    searchThroughDb(false, context, studentsStudentInfoBindingSource.Current as Students_StudentInfo);
+                }
+                else
+                {
+                    context.Entry<Students_StudentInfo>(studentsStudentInfoBindingSource.Current as Students_StudentInfo).State = System.Data.Entity.EntityState.Modified;
+
+                //still a problem in checking for duplicate records in edit function
+                //admin no are still not verified if exists
+                }
+
+                //running this any way still saves duplicate records in the database
+                context.SaveChanges();
         }
 
         private void FrmAddStudent_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
-        }
+                if (DialogResult == DialogResult.OK)
+                {
+                    if (string.IsNullOrEmpty(metroTextBoxAdminNo.Text) && string.IsNullOrEmpty(metroTextBoxFName.Text) && string.IsNullOrEmpty(metroTextBoxLName.Text) && string.IsNullOrEmpty(metroTextBoxForm.Text))
+                    {
+                        MessageBox.Show(this, "Please fill missing information", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        e.Cancel = true;
+                    }
+                    context.SaveChanges();
+                    e.Cancel = false;
+                }
+                e.Cancel = false;
+            }
     }
 }
